@@ -1,0 +1,50 @@
+@page
+@model ContactsRazor.Pages.ContactsModel
+@{
+    ViewData["Title"] = "Contacts";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Add New Contact</h2>
+            
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Message"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form method="post" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Contact.Name" class="form-label"></label>
+                    <input asp-for="Contact.Name" class="form-control" placeholder="Enter full name" />
+                    <span asp-validation-for="Contact.Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Contact.Email" class="form-label"></label>
+                    <input asp-for="Contact.Email" type="email" class="form-control" placeholder="Enter email address" />
+                    <span asp-validation-for="Contact.Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Contact.Phone" class="form-label"></label>
+                    <input asp-for="Contact.Phone" class="form-control" placeholder="Enter phone number" />
+                    <span asp-validation-for="Contact.Phone" class="text-danger"></span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
