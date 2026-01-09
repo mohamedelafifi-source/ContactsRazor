@@ -13,8 +13,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<ContactsDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register AuthService
+// Register Services
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<FileLoaderService>();
 
 // Configure Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -29,28 +30,28 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Use HTTPS in production
     });
 
-// Add authorization - Federation is determined by ClubCode == "FEDR"
+// Add authorization - Federation is determined by ClubCode == "FEDERE"
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("FederationOnly", policy => 
         policy.RequireAssertion(context => 
-            context.User.FindFirst("ClubCode")?.Value == "FEDR"));
+            context.User.FindFirst("ClubCode")?.Value == "FEDERE"));
     
     options.AddPolicy("ClubAccess", policy => 
         policy.RequireAssertion(context => 
-            context.User.HasClaim("ClubCode", "FEDR") || 
+            context.User.HasClaim("ClubCode", "FEDERE") || 
             !string.IsNullOrEmpty(context.User.FindFirst("ClubCode")?.Value)));
 });
 
 var app = builder.Build();
 
-// Ensure database is created and seeded
+// Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ContactsDbContext>();
     context.Database.EnsureCreated();
     
-    // Seed initial data if database is empty
+    // Seed initial Federation user only (clubs and other users loaded from files)
     var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
     await SeedDataAsync(context, authService);
 }
@@ -75,58 +76,26 @@ app.MapRazorPages();
 
 app.Run();
 
-// Seed data method
+// Seed data method - Only creates Federation user if no users exist
 static async Task SeedDataAsync(ContactsDbContext context, AuthService authService)
 {
-    // Check if clubs already exist
-    if (await context.Clubs.AnyAsync())
+    // Only create Federation user if no users exist (first time setup)
+    if (await context.Users.AnyAsync())
     {
-        return; // Database already seeded
+        return; // Users already exist, skip seeding
     }
 
-    // Create Federation club
-    var federation = new Club
-    {
-        ClubCode = "FEDR",
-        ClubId = "000000",
-        LongName = "Golf Federation",
-        NumberOfPlayers = 0,
-        IsActive = true,
-        CreatedAt = DateTime.UtcNow
-    };
-    context.Clubs.Add(federation);
-
-    // Create 10 clubs
-    for (int i = 1; i <= 10; i++)
-    {
-        var club = new Club
-        {
-            ClubCode = $"CLB{i:D1}",
-            ClubId = $"{i:D6}",
-            LongName = $"Golf Club {i}",
-            NumberOfPlayers = 0,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-        context.Clubs.Add(club);
-    }
-
-    await context.SaveChangesAsync();
-
-    // Create Federation user (ClubCode = "FEDR")
-    await authService.CreateUserAsync(
-        username: "federation",
-        password: "Federation@2024", // Change this password!
-        clubCode: "FEDR"
-    );
-
-    // Create a club captain user for each club
-    for (int i = 1; i <= 10; i++)
+    // Create Federation user with username "federe" and password "Federation@2026"
+    try
     {
         await authService.CreateUserAsync(
-            username: $"club{i}_captain",
-            password: $"Club{i}@2024", // Change these passwords!
-            clubCode: $"CLB{i}"
+            username: "federe",
+            password: "Federation@2026",
+            clubCode: "FEDERE"
         );
+    }
+    catch
+    {
+        // Ignore if user already exists
     }
 }

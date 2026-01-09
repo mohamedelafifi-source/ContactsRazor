@@ -36,6 +36,7 @@ public class AuthService
     /// </summary>
     public async Task<User?> AuthenticateAsync(string username, string password)
     {
+        // Use exact case-sensitive match for username
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Username == username);
 
@@ -57,8 +58,11 @@ public class AuthService
     /// </summary>
     public async Task<User> CreateUserAsync(string username, string password, string clubCode)
     {
+        // Ensure clubCode is uppercase for consistency
+        clubCode = clubCode.ToUpper().Trim();
+
         // Validate that club exists if not Federation
-        if (clubCode != "FEDR")
+        if (clubCode != "FEDERE")
         {
             var clubExists = await _context.Clubs.AnyAsync(c => c.ClubCode == clubCode);
             if (!clubExists)
@@ -69,7 +73,7 @@ public class AuthService
 
         var user = new User
         {
-            Username = username,
+            Username = username.Trim(),
             PasswordHash = HashPassword(password),
             ClubCode = clubCode
         };

@@ -7,22 +7,17 @@ public class Club
     public int Id { get; set; }
     
     [Required]
-    [StringLength(4, MinimumLength = 4)]
-    public string ClubCode { get; set; } = string.Empty;
-    
-    [Required]
     [StringLength(6, MinimumLength = 6)]
-    public string ClubId { get; set; } = string.Empty; // 6-digit unique identifier
+    public string ClubCode { get; set; } = string.Empty; // 6-character unique code (e.g., "CLB001", "FEDERE")
+    
+    [StringLength(6)]
+    public string? HmId { get; set; } // 6-digit HM ID, nullable/blank initially
     
     [Required]
     [StringLength(30)]
     public string LongName { get; set; } = string.Empty;
     
-    public int NumberOfPlayers { get; set; } = 0;
-    
-    public bool IsActive { get; set; } = true;
-    
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int? NumberOfPlayers { get; set; } // Nullable, blank initially
     
     // Navigation property
     public ICollection<User> Users { get; set; } = new List<User>();

@@ -16,13 +16,13 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     
     [Required]
-    [StringLength(4, MinimumLength = 4)]
-    public string ClubCode { get; set; } = string.Empty; // "FEDR" for Federation, "CLB1"-"CLB10" for clubs
+    [StringLength(6, MinimumLength = 6)]
+    public string ClubCode { get; set; } = string.Empty; // 6 characters: "FEDERE" for Federation, "CLB001"-"CLB010" for clubs
     
     // Helper properties
     [NotMapped]
-    public bool IsFederation => ClubCode == "FEDR";
+    public bool IsFederation => ClubCode.ToUpper().Trim() == "FEDERE";
     
     [NotMapped]
-    public bool IsClubCaptain => ClubCode != "FEDR" && !string.IsNullOrEmpty(ClubCode);
+    public bool IsClubCaptain => !IsFederation && !string.IsNullOrEmpty(ClubCode);
 }

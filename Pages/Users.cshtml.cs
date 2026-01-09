@@ -38,7 +38,6 @@ public class UsersModel : PageModel
             .ToListAsync();
 
         AllClubs = await _context.Clubs
-            .Where(c => c.IsActive)
             .OrderBy(c => c.ClubCode)
             .ToListAsync();
     }
@@ -51,13 +50,13 @@ public class UsersModel : PageModel
             return Page();
         }
 
-        // Validate ClubCode exists (unless it's FEDR)
-        if (NewUser.ClubCode != "FEDR")
+        // Validate ClubCode exists (unless it's FEDERE)
+        if (NewUser.ClubCode != "FEDERE")
         {
             var clubExists = await _context.Clubs.AnyAsync(c => c.ClubCode == NewUser.ClubCode);
             if (!clubExists)
             {
-                ModelState.AddModelError("NewUser.ClubCode", $"Club code '{NewUser.ClubCode}' not found. Use 'FEDR' for Federation.");
+                ModelState.AddModelError("NewUser.ClubCode", $"Club code '{NewUser.ClubCode}' not found. Use 'FEDERE' for Federation.");
                 await LoadDataAsync();
                 return Page();
             }
@@ -155,13 +154,23 @@ public class UsersModel : PageModel
                     continue;
                 }
 
-                // Validate ClubCode
-                if (clubCode != "FEDR")
+                // Validate ClubCode (convert to uppercase for consistency)
+                clubCode = clubCode.ToUpper();
+                
+                // Validate club code length
+                if (clubCode.Length != 6)
+                {
+                    errors.Add($"Line {lineNumber}: Club code '{clubCode}' must be exactly 6 characters.");
+                    continue;
+                }
+
+                // Validate club exists (unless it's Federation)
+                if (clubCode != "FEDERE")
                 {
                     var clubExists = await _context.Clubs.AnyAsync(c => c.ClubCode == clubCode);
                     if (!clubExists)
                     {
-                        errors.Add($"Line {lineNumber}: Club code '{clubCode}' not found.");
+                        errors.Add($"Line {lineNumber}: Club code '{clubCode}' not found. Load clubs first.");
                         continue;
                     }
                 }
@@ -239,7 +248,7 @@ public class UsersModel : PageModel
                     }
 
                     // Validate ClubCode
-                    if (userImport.ClubCode != "FEDR")
+                    if (userImport.ClubCode != "FEDERE")
                     {
                         var clubExists = await _context.Clubs.AnyAsync(c => c.ClubCode == userImport.ClubCode);
                         if (!clubExists)
@@ -292,9 +301,9 @@ public class UsersModel : PageModel
         {
             var csv = new StringBuilder();
             csv.AppendLine("Username,Password,ClubCode");
-            csv.AppendLine("club1_captain,SecurePass123,CLB1");
-            csv.AppendLine("club2_captain,SecurePass123,CLB2");
-            csv.AppendLine("federation_user,FedPass123,FEDR");
+            csv.AppendLine("club001_captain,SecurePass123,CLB001");
+            csv.AppendLine("club002_captain,SecurePass123,CLB002");
+            csv.AppendLine("federe,Federation@2026,FEDERE");
             
             return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "users_template.csv");
         }
@@ -304,9 +313,9 @@ public class UsersModel : PageModel
             {
                 users = new[]
                 {
-                    new { Username = "club1_captain", Password = "SecurePass123", ClubCode = "CLB1" },
-                    new { Username = "club2_captain", Password = "SecurePass123", ClubCode = "CLB2" },
-                    new { Username = "federation_user", Password = "FedPass123", ClubCode = "FEDR" }
+                    new { Username = "club001_captain", Password = "SecurePass123", ClubCode = "CLB001" },
+                    new { Username = "club002_captain", Password = "SecurePass123", ClubCode = "CLB002" },
+                    new { Username = "federe", Password = "Federation@2026", ClubCode = "FEDERE" }
                 }
             };
 
@@ -323,7 +332,6 @@ public class UsersModel : PageModel
             .ToListAsync();
 
         AllClubs = await _context.Clubs
-            .Where(c => c.IsActive)
             .OrderBy(c => c.ClubCode)
             .ToListAsync();
     }
@@ -343,8 +351,8 @@ public class UserInput
     public string? Password { get; set; }
 
     [Required(ErrorMessage = "Club Code is required")]
-    [StringLength(4, MinimumLength = 4)]
-    [Display(Name = "Club Code (4 characters: FEDR, CLB1-CLB10)")]
+    [StringLength(6, MinimumLength = 6)]
+    [Display(Name = "Club Code (6 characters: FEDERE, CLB001-CLB010)")]
     public string? ClubCode { get; set; }
 }
 

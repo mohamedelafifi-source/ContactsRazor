@@ -1,0 +1,11 @@
+federe|Federation@2026|FEDERE
+Ahmed|Ahmed123|KTHITS
+Ali|Ali123|NWGIZA
+club003_captain|Password123|CLB003
+club004_captain|Password123|CLB004
+club005_captain|Password123|CLB005
+club006_captain|Password123|CLB006
+club007_captain|Password123|CLB007
+club008_captain|Password123|CLB008
+club009_captain|Password123|CLB009
+club010_captain|Password123|CLB010

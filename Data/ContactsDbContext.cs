@@ -22,10 +22,6 @@ public class ContactsDbContext : DbContext
         modelBuilder.Entity<Club>()
             .HasIndex(c => c.ClubCode)
             .IsUnique();
-        
-        modelBuilder.Entity<Club>()
-            .HasIndex(c => c.ClubId)
-            .IsUnique();
 
         // User constraints
         modelBuilder.Entity<User>()

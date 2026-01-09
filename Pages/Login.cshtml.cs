@@ -41,7 +41,7 @@ public class LoginModel : PageModel
         }
 
         // Authenticate user
-        var user = await _authService.AuthenticateAsync(Input.Username!, Input.Password!);
+        var user = await _authService.AuthenticateAsync(Input.Username!.Trim(), Input.Password!);
 
         if (user == null)
         {
@@ -49,16 +49,19 @@ public class LoginModel : PageModel
             return Page();
         }
 
-        // Create claims
+        // Normalize ClubCode to uppercase for consistency
+        var clubCode = user.ClubCode.ToUpper().Trim();
+
+        // Create claims with normalized ClubCode
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim("ClubCode", user.ClubCode),
+            new Claim("ClubCode", clubCode),
         };
 
-        // Derive role from ClubCode for authorization
-        var role = user.ClubCode == "FEDR" ? "Federation" : "ClubCaptain";
+        // Derive role from ClubCode - Federation is "FEDERE"
+        var role = clubCode == "FEDERE" ? "Federation" : "ClubCaptain";
         claims.Add(new Claim("Role", role));
 
         var claimsIdentity = new ClaimsIdentity(
@@ -67,7 +70,6 @@ public class LoginModel : PageModel
 
         var authProperties = new AuthenticationProperties
         {
-            IsPersistent = Input.RememberMe,
             ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
         };
 
@@ -94,7 +96,4 @@ public class LoginInput
     [DataType(DataType.Password)]
     [Display(Name = "Password")]
     public string? Password { get; set; }
-
-    [Display(Name = "Remember me")]
-    public bool RememberMe { get; set; }
 }

@@ -5,7 +5,7 @@ namespace ContactsRazor.Helpers;
 public static class AuthorizationHelper
 {
     /// <summary>
-    /// Get the user's Club Code (4-character code)
+    /// Get the user's Club Code (6-character code)
     /// </summary>
     public static string? GetClubCode(this ClaimsPrincipal user)
     {
@@ -13,20 +13,20 @@ public static class AuthorizationHelper
     }
 
     /// <summary>
-    /// Check if user is Federation (ClubCode == "FEDR")
+    /// Check if user is Federation (ClubCode == "FEDERE")
     /// </summary>
     public static bool IsFederation(this ClaimsPrincipal user)
     {
-        return GetClubCode(user) == "FEDR";
+        return GetClubCode(user) == "FEDERE";
     }
 
     /// <summary>
-    /// Check if user is Club Captain (ClubCode != "FEDR")
+    /// Check if user is Club Captain (ClubCode != "FEDERE")
     /// </summary>
     public static bool IsClubCaptain(this ClaimsPrincipal user)
     {
         var clubCode = GetClubCode(user);
-        return !string.IsNullOrEmpty(clubCode) && clubCode != "FEDR";
+        return !string.IsNullOrEmpty(clubCode) && clubCode != "FEDERE";
     }
 
     /// <summary>
