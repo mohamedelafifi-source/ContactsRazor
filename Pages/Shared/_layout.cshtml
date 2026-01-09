@@ -1,21 +1,79 @@
+@using ContactsRazor.Helpers
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ContactsRazor</title>
+    <title>@ViewData["Title"] - Golf Application</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">🏌️ Golf Application</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Contacts">Contacts</a>
+                        </li>
+                        @if (User.IsFederation())
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Users">Users</a>
+                            </li>
+                        }
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                @User.GetUsername()
+                                @if (User.IsFederation())
+                                {
+                                    <span class="badge bg-warning text-dark ms-1">Federation</span>
+                                }
+                                else if (User.IsClubCaptain())
+                                {
+                                    <span class="badge bg-info ms-1">@User.GetClubCode()</span>
+                                }
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <form method="post" asp-page="/Logout" class="d-inline">
+                                        <button type="submit" class="dropdown-item">Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Login">Login</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <header class="mb-4 mt-3">
-            <h1 class="display-4">Contacts Application</h1>
-        </header>
         <main role="main">
             @RenderBody()
         </main>
     </div>
+
+    <footer class="mt-5 py-3 bg-light text-center">
+        <div class="container">
+            <span class="text-muted">© @DateTime.Now.Year Golf Application</span>
+        </div>
+    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,0 +1,51 @@
+@page
+@model DashboardModel
+@using ContactsRazor.Helpers
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron bg-light p-5 rounded mb-4">
+                <h1 class="display-4">Welcome, @User.GetUsername()!</h1>
+                <p class="lead">Golf Application Dashboard</p>
+                <hr class="my-4">
+                @if (User.IsFederation())
+                {
+                    <p>You are logged in as <strong>Federation</strong> - You have access to all clubs' data.</p>
+                }
+                else if (User.IsClubCaptain())
+                {
+                    <p>You are logged in as <strong>Club Captain</strong> for Club @User.GetClubCode()</p>
+                    <p>You can access your club's data only.</p>
+                }
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Contacts Management</h5>
+                            <p class="card-text">Manage contacts for your club.</p>
+                            <a href="/Contacts" class="btn btn-primary">Go to Contacts</a>
+                        </div>
+                    </div>
+                </div>
+                @if (User.IsFederation())
+                {
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">User Management</h5>
+                                <p class="card-text">Manage users and import from file.</p>
+                                <a href="/Users" class="btn btn-warning">Manage Users</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

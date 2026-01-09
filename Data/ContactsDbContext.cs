@@ -11,4 +11,25 @@ public class ContactsDbContext : DbContext
     }
 
     public DbSet<Contact> Contacts { get; set; }
+    public DbSet<Club> Clubs { get; set; }
+    public DbSet<User> Users { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Club constraints
+        modelBuilder.Entity<Club>()
+            .HasIndex(c => c.ClubCode)
+            .IsUnique();
+        
+        modelBuilder.Entity<Club>()
+            .HasIndex(c => c.ClubId)
+            .IsUnique();
+
+        // User constraints
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
+    }
 }

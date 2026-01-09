@@ -1,10 +1,79 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Welcome";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-5">
+                <h1 class="display-3">🏌️ Golf Application</h1>
+                <p class="lead">Welcome to the Golf Federation Management System</p>
+            </div>
+
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-4">Get Started</h2>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Federation Access</h5>
+                                    <p class="card-text">Full access to all clubs and federation-wide management tools.</p>
+                                    <a href="/Login" class="btn btn-primary">Federation Login</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Club Captain Access</h5>
+                                    <p class="card-text">Access your club's data and manage club-specific information.</p>
+                                    <a href="/Login" class="btn btn-info">Club Captain Login</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <p class="text-muted">
+                            <small>Please sign in to access the system. Contact your administrator if you need an account.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <h4>How It Works</h4>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>1. Login</h6>
+                                <p class="small">Use your username and password provided by the Federation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>2. Access Your Data</h6>
+                                <p class="small">Club Captains see only their club's data. Federation sees all clubs.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>3. Manage</h6>
+                                <p class="small">Add, view, and manage contacts and club information</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

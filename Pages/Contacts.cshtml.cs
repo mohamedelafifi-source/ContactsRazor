@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using ContactsRazor.Data;
 using ContactsRazor.Models;
+using ContactsRazor.Helpers;
 using System.ComponentModel.DataAnnotations;
 
 namespace ContactsRazor.Pages;
 
+[Authorize]
 public class ContactsModel : PageModel
 {
     private readonly ContactsDbContext _context;
