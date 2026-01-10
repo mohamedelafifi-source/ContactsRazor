@@ -1,89 +1,50 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ContactsRazor.Pages;
 
+[AllowAnonymous]
 public class LogoutModel : PageModel
 {
-    public async Task<IActionResult> OnPostAsync()
-    {
-        await LogoutUserAsync();
-        // Use redirect with timestamp to prevent caching
-        return Redirect($"/Login?t={DateTimeOffset.UtcNow.Ticks}");
-    }
-
     public async Task<IActionResult> OnGetAsync()
     {
         await LogoutUserAsync();
-        // Use redirect with timestamp to prevent caching
-        return Redirect($"/Login?t={DateTimeOffset.UtcNow.Ticks}");
+        
+        // Don't redirect immediately - let the page render first with redirect meta tag
+        // This ensures Safari sees the content before redirecting
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        await LogoutUserAsync();
+        
+        // Don't redirect immediately - let the page render first
+        return Page();
     }
 
     private async Task LogoutUserAsync()
     {
-        // Sign out the user - this should handle cookie deletion
+        // Step 1: Sign out from authentication FIRST
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         
-        // Aggressively delete cookies with all possible combinations
-        // Cookie name is typically ".AspNetCore.Cookies" or ".AspNetCore.Identity.Application"
-        var cookieNames = new[] { ".AspNetCore.Cookies", ".AspNetCore.Identity.Application" };
-        
-        var cookieOptions = new CookieOptions
+        // Step 2: Delete cookie with exact same settings it was created with
+        var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions
         {
             Expires = DateTimeOffset.UtcNow.AddDays(-1),
             HttpOnly = true,
             Secure = false,
-            SameSite = SameSiteMode.Lax,
+            SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
             Path = "/"
         };
         
-        // Delete with Lax sameSite
-        foreach (var cookieName in cookieNames)
-        {
-            Response.Cookies.Delete(cookieName, cookieOptions);
-        }
+        // Delete the cookie by setting it to empty and expired
+        Response.Cookies.Append(".AspNetCore.Cookies", "", cookieOptions);
+        Response.Cookies.Delete(".AspNetCore.Cookies", cookieOptions);
         
-        // Delete with None sameSite (in case it was set differently)
-        var cookieOptionsNone = new CookieOptions
-        {
-            Expires = DateTimeOffset.UtcNow.AddDays(-1),
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.None,
-            Path = "/"
-        };
-        
-        foreach (var cookieName in cookieNames)
-        {
-            Response.Cookies.Delete(cookieName, cookieOptionsNone);
-        }
-        
-        // Delete with Strict sameSite
-        var cookieOptionsStrict = new CookieOptions
-        {
-            Expires = DateTimeOffset.UtcNow.AddDays(-1),
-            HttpOnly = true,
-            Secure = false,
-            SameSite = SameSiteMode.Strict,
-            Path = "/"
-        };
-        
-        foreach (var cookieName in cookieNames)
-        {
-            Response.Cookies.Delete(cookieName, cookieOptionsStrict);
-        }
-        
-        // Clear any session data if session is enabled
-        if (HttpContext.Session != null)
-        {
-            HttpContext.Session.Clear();
-        }
-        
-        // Aggressive cache-control headers
-        Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
-        Response.Headers.Add("Pragma", "no-cache");
-        Response.Headers.Add("Expires", "Thu, 01 Jan 1970 00:00:00 GMT");
+        // Note: Session is not configured in this application, so we don't clear it
     }
 }

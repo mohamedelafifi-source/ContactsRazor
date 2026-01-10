@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using ContactsRazor.Services;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 
 namespace ContactsRazor.Pages;
 
+[AllowAnonymous]
 public class LoginModel : PageModel
 {
     private readonly AuthService _authService;
@@ -22,26 +24,50 @@ public class LoginModel : PageModel
 
     public string? ReturnUrl { get; set; }
 
-    public void OnGet(string? returnUrl = null)
+    public IActionResult OnGet(string? returnUrl = null)
     {
         ReturnUrl = returnUrl;
         
-        // Aggressive cache-control headers for Safari
-        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0";
-        Response.Headers["Pragma"] = "no-cache";
-        Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
+        // CRITICAL: Delete authentication cookie when accessing Login page
+        var cookieOptions = new Microsoft.AspNetCore.Http.CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddDays(-1),
+            Path = "/",
+            SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax,
+            HttpOnly = true,
+            Secure = false
+        };
         
-        // If user is already logged in, redirect to dashboard
+        // Delete by setting empty value
+        Response.Cookies.Append(".AspNetCore.Cookies", "", cookieOptions);
+        Response.Cookies.Delete(".AspNetCore.Cookies", cookieOptions);
+        
+        // If logout parameter is present, force sign out
+        if (Request.Query.ContainsKey("logout"))
+        {
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
+        }
+        
+        // NEVER redirect authenticated users to Dashboard from Login - always show Login
         if (User.Identity?.IsAuthenticated == true)
         {
-            Response.Redirect("/Dashboard");
+            // Force logout
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
+            Response.Cookies.Append(".AspNetCore.Cookies", "", cookieOptions);
         }
+        
+        // Let Razor Pages handle Content-Type automatically - don't set it manually
+        // This prevents Safari from downloading the page
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
-        // Set cache headers even on POST
-        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0";
+        // Ensure Content-Type
+        Response.ContentType = "text/html; charset=utf-8";
+        
+        // Set no-cache headers
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0, private";
         Response.Headers["Pragma"] = "no-cache";
         Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
         
@@ -56,13 +82,14 @@ public class LoginModel : PageModel
         if (user == null)
         {
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            Input.Password = string.Empty;
             return Page();
         }
 
-        // Normalize ClubCode to uppercase for consistency
+        // Normalize ClubCode
         var clubCode = user.ClubCode.ToUpper().Trim();
 
-        // Create claims with normalized ClubCode
+        // Create claims
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, user.Username),
@@ -70,7 +97,6 @@ public class LoginModel : PageModel
             new Claim("ClubCode", clubCode),
         };
 
-        // Derive role from ClubCode - Federation is "FEDERE"
         var role = clubCode == "FEDERE" ? "Federation" : "ClubCaptain";
         claims.Add(new Claim("Role", role));
 
@@ -81,8 +107,8 @@ public class LoginModel : PageModel
         var authProperties = new AuthenticationProperties
         {
             ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
-            IsPersistent = false, // Don't persist across browser sessions
-            AllowRefresh = false // Prevent cookie refresh to avoid caching issues
+            IsPersistent = false,
+            AllowRefresh = false
         };
 
         // Sign in
@@ -91,9 +117,13 @@ public class LoginModel : PageModel
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        // Redirect to return URL or default page
+        // Redirect to Dashboard with timestamp
         returnUrl ??= "/Dashboard";
-        return LocalRedirect(returnUrl);
+        var timestamp = DateTimeOffset.UtcNow.Ticks;
+        var redirectUrl = returnUrl.Contains('?') 
+            ? $"{returnUrl}&t={timestamp}" 
+            : $"{returnUrl}?t={timestamp}";
+        return LocalRedirect(redirectUrl);
     }
 }
 

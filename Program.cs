@@ -105,6 +105,30 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Middleware to set no-cache headers - Use OnStarting callback to set headers BEFORE response starts
+app.Use(async (context, next) =>
+{
+    // Register callback to set headers BEFORE response starts
+    context.Response.OnStarting(() =>
+    {
+        // Only set headers for successful HTML responses, not redirects (3xx)
+        if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)
+        {
+            var contentType = context.Response.ContentType ?? "";
+            if (contentType.Contains("text/html"))
+            {
+                context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0, private";
+                context.Response.Headers["Pragma"] = "no-cache";
+                context.Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
+                context.Response.Headers["Vary"] = "Cookie";
+            }
+        }
+        return Task.CompletedTask;
+    });
+    
+    await next();
+});
+
 app.MapRazorPages();
 
 app.Run();
