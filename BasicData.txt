@@ -1,0 +1,11 @@
+federe|Federation@2026|FEDERE|Golf Federation
+Ahmed|Ahmed123|KTHITS|Katameya Heights
+Ali|Ali123|NWGIZA|New Giza
+Ibrahim|Ibrahim123|KTDUNE|Katameya Dunes
+Nayla|Nayla123|ALGRIA|The Allegria
+Mahmoud|Mahmoud123|UPTOWN|Uptown Golf Club
+Galal|Galal123|GEZIRA|Guezira Golf
+Karim|Karim123|MADINA|Madinaty Golf Club
+Senousy|Senousy123|ASCLUB|Alexandria Sporting Club
+Palm|Palm123|PLMHIL|Palm Hills
+Farid|Farid123|SOKHNA|Sokhna Golf Club

@@ -6,12 +6,10 @@
 
 #### Club Model (`Models/Club.cs`)
 - `Id` (int, Primary Key)
-- `ClubCode` (string, 4 characters, unique) - e.g., "CLB1", "FEDR"
+- `ClubCode` (string, 6 characters, unique) - e.g., "CLB1", "FEDERE"
 - `ClubId` (string, 6 digits, unique) - e.g., "000001", "000000" for Federation
 - `LongName` (string, 30 characters)
 - `NumberOfPlayers` (int)
-- `IsActive` (bool)
-- `CreatedAt` (DateTime)
 - Navigation property to Users
 
 #### User Model (`Models/User.cs`)
@@ -20,9 +18,6 @@
 - `PasswordHash` (string, 255) - BCrypt hashed password
 - `Role` (string, 20) - "ClubCaptain" or "Federation"
 - `ClubId` (int?, nullable) - null for Federation, int for Club
-- `IsActive` (bool)
-- `CreatedAt` (DateTime)
-- `LastLoginAt` (DateTime?, nullable)
 - Navigation property to Club
 - Helper properties: `IsFederation`, `IsClubCaptain`
 

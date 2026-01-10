@@ -27,7 +27,7 @@ Users Table:
      - Club Code (e.g., "CLB1", "CLB2", "FEDR")
    
 2. **Club Linking:**
-   - The system looks up the Club by its 4-character ClubCode
+   - The system looks up the Club by its 6-character ClubCode
    - The User's `ClubId` is set to the Club's `Id` (integer)
    - For Federation users, `ClubId` is set to NULL
 

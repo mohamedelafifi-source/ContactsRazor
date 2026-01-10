@@ -26,6 +26,11 @@ public class LoginModel : PageModel
     {
         ReturnUrl = returnUrl;
         
+        // Aggressive cache-control headers for Safari
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
+        
         // If user is already logged in, redirect to dashboard
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -35,6 +40,11 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
     {
+        // Set cache headers even on POST
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
+        
         if (!ModelState.IsValid)
         {
             return Page();
@@ -70,7 +80,9 @@ public class LoginModel : PageModel
 
         var authProperties = new AuthenticationProperties
         {
-            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
+            IsPersistent = false, // Don't persist across browser sessions
+            AllowRefresh = false // Prevent cookie refresh to avoid caching issues
         };
 
         // Sign in

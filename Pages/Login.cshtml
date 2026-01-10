@@ -2,6 +2,16 @@
 @model ContactsRazor.Pages.LoginModel
 @{
     ViewData["Title"] = "Login";
+    // Force no cache for Safari
+    Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0";
+    Response.Headers["Pragma"] = "no-cache";
+    Response.Headers["Expires"] = "Thu, 01 Jan 1970 00:00:00 GMT";
+}
+
+@section HeadMeta {
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 }
 
 <div class="container mt-5">
@@ -17,13 +27,13 @@
                         
                         <div class="mb-3">
                             <label asp-for="Input.Username" class="form-label">Username</label>
-                            <input asp-for="Input.Username" class="form-control" autofocus placeholder="Enter username" />
+                            <input asp-for="Input.Username" class="form-control" autofocus placeholder="Enter username" autocomplete="username" />
                             <span asp-validation-for="Input.Username" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Input.Password" class="form-label">Password</label>
-                            <input asp-for="Input.Password" class="form-control" placeholder="Enter password" />
+                            <input asp-for="Input.Password" class="form-control" placeholder="Enter password" autocomplete="current-password" />
                             <span asp-validation-for="Input.Password" class="text-danger"></span>
                         </div>
 
@@ -34,7 +44,6 @@
                 </div>
                 <div class="card-footer text-muted text-center small">
                     <p class="mb-0">Federation and Club Captains Login</p>
-                    <p class="mb-0 mt-2"><small>After login, Federation users can load clubs and users from configuration files</small></p>
                 </div>
             </div>
         </div>

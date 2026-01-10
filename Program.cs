@@ -1,5 +1,4 @@
 using ContactsRazor.Data;
-using ContactsRazor.Models;
 using ContactsRazor.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +14,7 @@ builder.Services.AddDbContext<ContactsDbContext>(options =>
 
 // Register Services
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<FileLoaderService>();
+builder.Services.AddScoped<BasicDataLoaderService>();
 
 // Configure Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -24,10 +23,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Login";
         options.LogoutPath = "/Logout";
         options.AccessDeniedPath = "/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(8); // Session expires after 8 hours
-        options.SlidingExpiration = true; // Reset expiration on activity
-        options.Cookie.HttpOnly = true; // Prevent XSS attacks
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // Use HTTPS in production
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = false; // Disable sliding expiration to prevent caching issues
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.Name = ".AspNetCore.Cookies"; // Explicit cookie name
+        // Configure logout events to ensure cookie is properly deleted
+        options.Events.OnSigningOut = async context =>
+        {
+            context.CookieOptions.Expires = DateTimeOffset.UtcNow.AddDays(-1);
+            context.CookieOptions.MaxAge = TimeSpan.Zero; // Immediately expire
+        };
     });
 
 // Add authorization - Federation is determined by ClubCode == "FEDERE"
@@ -45,15 +52,41 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Ensure database is created
+// Ensure database is created and load BasicData.txt
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ContactsDbContext>();
     context.Database.EnsureCreated();
     
-    // Seed initial Federation user only (clubs and other users loaded from files)
-    var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
-    await SeedDataAsync(context, authService);
+    // Load BasicData.txt automatically on startup
+    var basicDataLoader = scope.ServiceProvider.GetRequiredService<BasicDataLoaderService>();
+    var loadResult = await basicDataLoader.LoadBasicDataAsync();
+    
+    // Log results (errors will be logged, warnings can be reviewed)
+    if (!loadResult.Success)
+    {
+        Console.WriteLine("=== BasicData.txt Loading Errors ===");
+        foreach (var error in loadResult.Errors)
+        {
+            Console.WriteLine($"Error: {error}");
+        }
+    }
+    
+    if (loadResult.Warnings.Any())
+    {
+        Console.WriteLine("=== BasicData.txt Loading Warnings ===");
+        foreach (var warning in loadResult.Warnings)
+        {
+            Console.WriteLine($"Warning: {warning}");
+        }
+    }
+    
+    if (loadResult.Success || loadResult.UsersAdded > 0 || loadResult.UsersUpdated > 0)
+    {
+        Console.WriteLine($"=== BasicData.txt Loaded Successfully ===");
+        Console.WriteLine($"Clubs: Added {loadResult.ClubsAdded}, Updated {loadResult.ClubsUpdated}");
+        Console.WriteLine($"Users: Added {loadResult.UsersAdded}, Updated {loadResult.UsersUpdated}");
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -69,33 +102,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // Must come before UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
 
 app.Run();
-
-// Seed data method - Only creates Federation user if no users exist
-static async Task SeedDataAsync(ContactsDbContext context, AuthService authService)
-{
-    // Only create Federation user if no users exist (first time setup)
-    if (await context.Users.AnyAsync())
-    {
-        return; // Users already exist, skip seeding
-    }
-
-    // Create Federation user with username "federe" and password "Federation@2026"
-    try
-    {
-        await authService.CreateUserAsync(
-            username: "federe",
-            password: "Federation@2026",
-            clubCode: "FEDERE"
-        );
-    }
-    catch
-    {
-        // Ignore if user already exists
-    }
-}
