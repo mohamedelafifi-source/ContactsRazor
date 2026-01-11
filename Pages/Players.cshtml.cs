@@ -33,7 +33,7 @@ public class PlayersModel : PageModel
     public int TotalPlayers { get; set; }
     public List<string> AvailableFiles { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync(int? id = null)
+    public async Task<IActionResult> OnGetAsync(int? id = null, bool @new = false)
     {
         var clubCode = User.GetClubCode();
         if (string.IsNullOrEmpty(clubCode) || clubCode == "FEDERE")
@@ -61,6 +61,19 @@ public class PlayersModel : PageModel
         // Get available player files for import
         AvailableFiles = _playerLoader.GetAvailablePlayerFiles();
 
+        // Handle "new player" request explicitly
+        if (@new)
+        {
+            // Show empty form for new player
+            CurrentPlayerIndex = 0;
+            CurrentPlayer = null;
+            PlayerInput.PlayerId = 0;
+            PlayerInput.Code = string.Empty;
+            PlayerInput.Name = string.Empty;
+            PlayerInput.Index = 0;
+            return Page();
+        }
+
         // Get current player
         if (id.HasValue && id.Value > 0)
         {
@@ -68,11 +81,11 @@ public class PlayersModel : PageModel
         }
         else if (players.Any())
         {
-            // If no specific player requested, get first player
+            // If no id provided and players exist, show first player
             CurrentPlayer = players.First();
         }
 
-        // Set up Next/Previous navigation
+        // Set up Next/Previous navigation and populate form
         if (CurrentPlayer != null && players.Any())
         {
             var currentIndex = players.IndexOf(CurrentPlayer);
@@ -98,9 +111,13 @@ public class PlayersModel : PageModel
         }
         else
         {
-            // No players yet - show empty form
+            // No players exist - show empty form for first player
             CurrentPlayerIndex = 0;
+            CurrentPlayer = null;
             PlayerInput.PlayerId = 0;
+            PlayerInput.Code = string.Empty;
+            PlayerInput.Name = string.Empty;
+            PlayerInput.Index = 0;
         }
 
         return Page();
