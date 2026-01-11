@@ -19,6 +19,7 @@ public class Club
     
     public int? NumberOfPlayers { get; set; } // Nullable, blank initially
     
-    // Navigation property
+    // Navigation properties
     public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<Player> Players { get; set; } = new List<Player>();
 }

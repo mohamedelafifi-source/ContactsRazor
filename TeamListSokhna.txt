@@ -1,0 +1,21 @@
+Code : 104573; Name : Samer Farhat ; Index: 7.6 
+Code : 111638; Name : Amina El Halawani; Index: 8.5
+Code : 105643; Name : Hesham Tarraf; Index: 9.0
+Code : 108464; NAme : Sophie Issa ; Index: 11.2
+Code : 124348; NAME : Javier Quantilla; Index: 11.6
+Code : 104594; Name : Yousri Fouad ; Index: 11.9
+Code : 102780; Name : Ahmed Ismail ; Index: 12
+Code : 102896; Name : Ali Mohamed ; Index: 12.5
+Code : 104017; Name : Raphael Remande ; Index: 12.8
+Code : 113690; Name : Cherif Shalakany ; Index: 14.6
+Code : 108455; Name : Farid Issa; Index: 15.2
+Code : 109301; Name : Miguel Angel Sanjuan ; Index: 16.4
+Code : 113753; Name : Elma Garcia;1 Index: 6.6
+Code : 104001; Name : Corine Remande ; Index: 18.5
+Code : 107692; Name : Mohamed El Afifi ; Index: 19.3
+Code : 108035; NAME : Yousry El Halawany; Index: 21.8
+Code : 107684; NAME : Luis Aspe Serana; Index: 21.8
+Code : 107632; NAME : Stephane Antaki ; Index: 22.8
+Code : 103011; NAME : Mohamed Shorosh ; Index: 24.7
+Code : 107621; NAME : Paul Antaki ; Index: 29.4
+

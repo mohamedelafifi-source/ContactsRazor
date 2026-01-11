@@ -10,7 +10,7 @@ public class ContactsDbContext : DbContext
     {
     }
 
-    public DbSet<Contact> Contacts { get; set; }
+    public DbSet<Player> Players { get; set; }
     public DbSet<Club> Clubs { get; set; }
     public DbSet<User> Users { get; set; }
 
@@ -27,5 +27,18 @@ public class ContactsDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
+
+        // Player constraints - Code and Name unique everywhere (globally)
+        modelBuilder.Entity<Player>()
+            .HasIndex(p => p.Code)
+            .IsUnique();
+        
+        modelBuilder.Entity<Player>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+        
+        // Also index ClubCode for faster queries by club
+        modelBuilder.Entity<Player>()
+            .HasIndex(p => p.ClubCode);
     }
 }

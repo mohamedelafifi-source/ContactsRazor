@@ -15,6 +15,7 @@ builder.Services.AddDbContext<ContactsDbContext>(options =>
 // Register Services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BasicDataLoaderService>();
+builder.Services.AddScoped<PlayerLoaderService>();
 
 // Configure Cookie Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

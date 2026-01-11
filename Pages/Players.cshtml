@@ -1,0 +1,180 @@
+@page
+@model ContactsRazor.Pages.PlayersModel
+@{
+    ViewData["Title"] = "Players";
+}
+
+<div class="container mt-4">
+    <!-- Club Information Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="card-title mb-1">@(Model.CurrentClub?.ClubCode ?? "N/A") - @(Model.CurrentClub?.LongName ?? "N/A")</h2>
+                    <p class="card-text mb-0">Number of Players: <strong>@(Model.CurrentClub?.NumberOfPlayers ?? 0)</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            @TempData["Warning"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Player Form -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        @if (Model.CurrentPlayer != null)
+                        {
+                            <span>Player @Model.CurrentPlayerIndex of @Model.TotalPlayers</span>
+                        }
+                        else
+                        {
+                            <span>New Player</span>
+                        }
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" asp-for="PlayerInput.PlayerId" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="PlayerInput.Code" class="form-label">Code (6 digits)</label>
+                            <input asp-for="PlayerInput.Code" class="form-control" placeholder="000000" maxlength="6" />
+                            <span asp-validation-for="PlayerInput.Code" class="text-danger"></span>
+                            <small class="form-text text-muted">Must be exactly 6 digits</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PlayerInput.Name" class="form-label">Name (max 30 characters)</label>
+                            <input asp-for="PlayerInput.Name" class="form-control" placeholder="Enter player name" maxlength="30" />
+                            <span asp-validation-for="PlayerInput.Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PlayerInput.Index" class="form-label">Index (nn.n)</label>
+                            <input asp-for="PlayerInput.Index" class="form-control" type="number" step="0.1" placeholder="0.0" />
+                            <span asp-validation-for="PlayerInput.Index" class="text-danger"></span>
+                            <small class="form-text text-muted">Format: nn.n (e.g., 9.4, 21.0)</small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <div>
+                                @if (Model.PreviousPlayerId.HasValue)
+                                {
+                                    <a href="/Players?id=@Model.PreviousPlayerId" class="btn btn-secondary">← Previous</a>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-secondary" disabled>← Previous</button>
+                                }
+                                
+                                @if (Model.NextPlayerId.HasValue)
+                                {
+                                    <a href="/Players?id=@Model.NextPlayerId" class="btn btn-secondary">Next →</a>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-secondary" disabled>Next →</button>
+                                }
+                            </div>
+                            
+                            <div>
+                                @if (Model.PlayerInput.PlayerId > 0)
+                                {
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-success">Add</button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                    
+                    @if (Model.PlayerInput.PlayerId > 0)
+                    {
+                        <div class="mt-2">
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@Model.PlayerInput.PlayerId" 
+                                  onsubmit="return confirm('Are you sure you want to delete this player?');" 
+                                  class="d-inline">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Section -->
+    <div class="row mt-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Import Players</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.AvailableFiles.Any())
+                    {
+                        <form method="post" asp-page-handler="Import">
+                            <div class="mb-3">
+                                <label for="fileName" class="form-label">Select file to import:</label>
+                                <select name="fileName" id="fileName" class="form-select" required>
+                                    <option value="">-- Select a file --</option>
+                                    @foreach (var file in Model.AvailableFiles)
+                                    {
+                                        <option value="@file">@file</option>
+                                    }
+                                </select>
+                                <small class="form-text text-muted">Files must be in format: Code : value; Name : value; Index: value</small>
+                            </div>
+                            <button type="submit" class="btn btn-warning">Import</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No TeamList*.txt files found in the server directory.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Button -->
+    <div class="row mt-4">
+        <div class="col-md-8 mx-auto text-center">
+            <a href="/Dashboard" class="btn btn-outline-secondary btn-lg">Exit to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
