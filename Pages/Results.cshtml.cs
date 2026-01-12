@@ -35,7 +35,7 @@ public class ResultsModel : PageModel
     public int TotalResultEntries { get; set; }
     public int MaxResultEntries { get; set; } = 8;
     
-    public List<SelectListItem> Clubs { get; set; } = new();
+    public List<Club> Clubs { get; set; } = new();
     public List<SelectListItem> Players { get; set; } = new();
     public List<ResultSetSummary> ExistingResultSets { get; set; } = new();
 
@@ -62,15 +62,10 @@ public class ResultsModel : PageModel
         Mode = mode ?? "new";
 
         // Load clubs for venue selection
-        var allClubs = await _context.Clubs
+        Clubs = await _context.Clubs
             .Where(c => c.ClubCode != "FEDERE")
-            .OrderBy(c => c.ClubCode)
+            .OrderBy(c => c.LongName)
             .ToListAsync();
-        Clubs = allClubs.Select(c => new SelectListItem
-        {
-            Value = c.ClubCode,
-            Text = $"{c.ClubCode} - {c.LongName}"
-        }).ToList();
 
         // Load players for the current club
         var clubPlayers = await _context.Players
@@ -412,7 +407,6 @@ public class ResultSetInput
     public DateTime Date { get; set; } = DateTime.Today;
 
     [Required(ErrorMessage = "Venue is required")]
-    [StringLength(6, MinimumLength = 6)]
     [Display(Name = "Venue (Club)")]
     public string VenueClubCode { get; set; } = string.Empty;
 }

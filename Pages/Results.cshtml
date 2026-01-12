@@ -85,8 +85,12 @@
 
                             <div class="mb-3">
                                 <label asp-for="ResultSetInput.VenueClubCode" class="form-label"></label>
-                                <select asp-for="ResultSetInput.VenueClubCode" asp-items="Model.Clubs" class="form-select">
+                                <select asp-for="ResultSetInput.VenueClubCode" class="form-select">
                                     <option value="">-- Select Venue (Club) --</option>
+                                    @foreach (var club in Model.Clubs)
+                                    {
+                                        <option value="@club.ClubCode">@club.LongName</option>
+                                    }
                                 </select>
                                 <span asp-validation-for="ResultSetInput.VenueClubCode" class="text-danger"></span>
                             </div>
