@@ -65,7 +65,7 @@ When you run the application, this sequence happens automatically:
    - If clubs don't exist → Creates:
      - Federation club (FEDR)
      - 10 clubs (CLB1-CLB10)
-     - Federation user (username: "federation", password: "Federation@2024")
+     - Federation user (username: "federation", password: "Federation@2026")
      - 10 club captain users (club1_captain through club10_captain)
 
 4. **Database is Ready!**
@@ -78,7 +78,7 @@ When you run the application, this sequence happens automatically:
 2. Click "Login"
 3. Enter:
    - Username: `federation`
-   - Password: `Federation@2024`
+   - Password: `Federation@2026`
 4. Should login successfully!
 
 ## Summary of What Changed
