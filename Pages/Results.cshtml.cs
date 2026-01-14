@@ -111,6 +111,9 @@ public class ResultsModel : PageModel
                 return RedirectToPage("/Results", new { mode = "existing" });
             }
 
+            // Set mode to existing when a result set is selected
+            Mode = "existing";
+
             // Populate ResultSetInput
             ResultSetInput.ResultSetId = CurrentResultSet.Id;
             ResultSetInput.Date = CurrentResultSet.Date;
@@ -223,13 +226,19 @@ public class ResultsModel : PageModel
             }
             else if (CurrentResultSet != null)
             {
-                // Result set exists but no entries yet
+                // Result set exists but no entries yet - show empty form
+                ResultSetInput.ResultSetId = CurrentResultSet.Id;
                 CurrentResultEntryIndex = 0;
                 CurrentResultEntry = null;
                 ResultEntryInput.ResultEntryId = 0;
                 ResultEntryInput.PlayerId = 0;
                 ResultEntryInput.HCP = 0;
                 ResultEntryInput.Result = 0;
+                // Allow Next to create new entry if under max
+                if (resultEntries.Count < MaxResultEntries)
+                {
+                    NextResultEntryId = -1; // Special marker for "new entry"
+                }
             }
         }
 
@@ -295,6 +304,11 @@ public class ResultsModel : PageModel
             return RedirectToPage("/Dashboard");
         }
 
+        // Remove validation errors for ResultSetInput.Date and VenueClubCode
+        // since we only need ResultSetId for adding/updating entries
+        ModelState.Remove(nameof(ResultSetInput) + "." + nameof(ResultSetInput.Date));
+        ModelState.Remove(nameof(ResultSetInput) + "." + nameof(ResultSetInput.VenueClubCode));
+
         if (!ModelState.IsValid)
         {
             if (ResultSetInput.ResultSetId > 0)
@@ -305,6 +319,12 @@ public class ResultsModel : PageModel
         }
 
         // Validate result set exists and belongs to user's club
+        if (ResultSetInput.ResultSetId <= 0)
+        {
+            ModelState.AddModelError("", "Result set ID is required.");
+            return await OnGetAsync("existing");
+        }
+
         var resultSet = await _context.ResultSets
             .FirstOrDefaultAsync(rs => rs.Id == ResultSetInput.ResultSetId && rs.ClubCode == clubCode);
         
