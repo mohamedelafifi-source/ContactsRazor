@@ -73,10 +73,10 @@
             <div class="col-md-8 mx-auto">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="mb-0">New Result Set</h4>
+                        <h4 class="mb-0">New Results</h4>
                     </div>
                     <div class="card-body">
-                        <form method="post" asp-page-handler="CreateResultSet">
+                        <form method="post" asp-page-handler="NewResultSet">
                             <div class="mb-3">
                                 <label asp-for="ResultSetInput.Date" class="form-label"></label>
                                 <input asp-for="ResultSetInput.Date" class="form-control" type="date" />
@@ -96,8 +96,7 @@
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="submit" class="btn btn-success">Create Result Set</button>
-                                <a href="/Dashboard" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-success">New Results</button>
                             </div>
                         </form>
                     </div>
@@ -169,7 +168,14 @@
                                     
                                     @if (Model.NextResultEntryId.HasValue)
                                     {
-                                        <a href="/Results?mode=existing&resultSetId=@Model.CurrentResultSet.Id&entryId=@Model.NextResultEntryId" class="btn btn-secondary">Next →</a>
+                                        @if (Model.NextResultEntryId == -1)
+                                        {
+                                            <a href="/Results?mode=existing&resultSetId=@Model.CurrentResultSet.Id&entryId=-1" class="btn btn-secondary">Next →</a>
+                                        }
+                                        else
+                                        {
+                                            <a href="/Results?mode=existing&resultSetId=@Model.CurrentResultSet.Id&entryId=@Model.NextResultEntryId" class="btn btn-secondary">Next →</a>
+                                        }
                                     }
                                     else
                                     {
@@ -187,14 +193,7 @@
                                 </div>
                                 
                                 <div>
-                                    @if (Model.ResultEntryInput.ResultEntryId > 0)
-                                    {
-                                        <button type="submit" class="btn btn-primary">Update</button>
-                                    }
-                                    else
-                                    {
-                                        <button type="submit" class="btn btn-success">Add</button>
-                                    }
+                                    <button type="submit" class="btn btn-primary">Update</button>
                                 </div>
                             </div>
                         </form>

@@ -158,7 +158,32 @@ public class ResultsModel : PageModel
             }
 
             // Get current result entry
-            if (entryId.HasValue && entryId.Value > 0)
+            // Handle special case: entryId = -1 means "new entry after last"
+            if (entryId.HasValue && entryId.Value == -1)
+            {
+                // Show empty form for new entry after last
+                if (resultEntries.Count < MaxResultEntries)
+                {
+                    CurrentResultEntryIndex = 0;
+                    CurrentResultEntry = null;
+                    ResultEntryInput.ResultEntryId = 0;
+                    ResultEntryInput.PlayerId = 0;
+                    ResultEntryInput.HCP = 0;
+                    ResultEntryInput.Result = 0;
+                    // Set Previous to last entry
+                    if (resultEntries.Any())
+                    {
+                        PreviousResultEntryId = resultEntries.Last().Id;
+                    }
+                    return Page();
+                }
+                else
+                {
+                    TempData["Error"] = $"Maximum {MaxResultEntries} results allowed per result set.";
+                    return RedirectToPage("/Results", new { mode = "existing", resultSetId = CurrentResultSet.Id });
+                }
+            }
+            else if (entryId.HasValue && entryId.Value > 0)
             {
                 CurrentResultEntry = resultEntries.FirstOrDefault(re => re.Id == entryId.Value);
             }
@@ -179,10 +204,15 @@ public class ResultsModel : PageModel
                     PreviousResultEntryId = resultEntries[currentIndex - 1].Id;
                 }
 
-                // Next entry
+                // Next entry - allow going one step beyond last entry to create new entry
                 if (currentIndex < resultEntries.Count - 1)
                 {
                     NextResultEntryId = resultEntries[currentIndex + 1].Id;
+                }
+                else if (currentIndex == resultEntries.Count - 1 && resultEntries.Count < MaxResultEntries)
+                {
+                    // Allow Next to go one step beyond to create new entry
+                    NextResultEntryId = -1; // Special marker for "new entry after last"
                 }
 
                 // Populate form with current entry data
@@ -206,7 +236,7 @@ public class ResultsModel : PageModel
         return Page();
     }
 
-    public async Task<IActionResult> OnPostCreateResultSetAsync()
+    public async Task<IActionResult> OnPostNewResultSetAsync()
     {
         var clubCode = User.GetClubCode();
         if (string.IsNullOrEmpty(clubCode) || clubCode == "FEDERE")
@@ -225,6 +255,19 @@ public class ResultsModel : PageModel
         {
             ModelState.AddModelError(nameof(ResultSetInput.Date), "Date cannot be in the future.");
             return await OnGetAsync("new");
+        }
+
+        // Check if result set already exists for this date and venue
+        var existingResultSet = await _context.ResultSets
+            .FirstOrDefaultAsync(rs => rs.ClubCode == clubCode && 
+                                      rs.VenueClubCode == ResultSetInput.VenueClubCode && 
+                                      rs.Date == ResultSetInput.Date);
+
+        if (existingResultSet != null)
+        {
+            // Use existing result set
+            TempData["Message"] = "Result set already exists. You can now add result entries.";
+            return RedirectToPage("/Results", new { mode = "existing", resultSetId = existingResultSet.Id });
         }
 
         // Create new result set
