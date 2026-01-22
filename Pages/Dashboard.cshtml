@@ -64,6 +64,21 @@
                     </div>
                 }
             </div>
+
+            @if (User.IsFederation())
+            {
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">🔧 Results Management</h5>
+                                <p class="card-text">Backup, restore, or clear competition results.</p>
+                                <a href="/ResultsManagement" class="btn btn-info">Manage Results</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

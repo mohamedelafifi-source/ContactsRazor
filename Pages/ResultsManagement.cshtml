@@ -1,0 +1,234 @@
+@page
+@model ResultsManagementModel
+@using ContactsRazor.Helpers
+@{
+    ViewData["Title"] = "Results Management";
+}
+
+@section HeadMeta {
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="Thu, 01 Jan 1970 00:00:00 GMT" />
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron bg-light p-5 rounded mb-4">
+                <h1 class="display-4">Results Management</h1>
+                <p class="lead">Federation-only functions for managing competition results</p>
+                <hr class="my-4">
+                <p><strong>Current Statistics:</strong></p>
+                <ul>
+                    <li>Total Result Sets: <strong>@Model.TotalResultSets</strong></li>
+                    <li>Total Result Entries: <strong>@Model.TotalResultEntries</strong></li>
+                </ul>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @Model.SuccessMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @Model.ErrorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Database Backup/Restore Section -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h3>Database Backup & Restore</h3>
+                    <p class="text-muted">Backup or restore the entire database (all data including clubs, players, users, and results).</p>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <!-- Database Backup Card -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">💾 Backup Database</h5>
+                            <p class="card-text">Export the entire database to a backup file.</p>
+                            <p class="text-muted small">This includes all clubs, players, users, and results.</p>
+                            <form id="backupForm" method="post" asp-page-handler="BackupDatabase" style="display: none;">
+                                @Html.AntiForgeryToken()
+                            </form>
+                            <button type="button" class="btn btn-primary" onclick="backupDatabase()">Database Backup</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Restore Card -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">📥 Restore Database</h5>
+                            <p class="card-text">Import database from a previously created backup file.</p>
+                            <p class="text-danger small"><strong>Warning:</strong> This will replace the entire database!</p>
+                            <form method="post" asp-page-handler="RestoreDatabase" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="databaseFile" class="form-label">Select Database Backup File</label>
+                                    <input type="file" class="form-control" id="databaseFile" name="databaseFile" accept=".db,.sqlite,.sqlite3" required>
+                                </div>
+                                <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to restore the database? This will replace ALL existing data (clubs, players, users, and results)!');">Restore Database</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clear Results Section -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h3>Clear Results</h3>
+                    <p class="text-muted">Delete only competition results. This does not affect clubs, players, or users.</p>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <!-- Clear Results Card -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">🗑️ Clear Results</h5>
+                            <p class="card-text">Delete all competition results. This is for testing purposes only.</p>
+                            <p class="text-muted small"><strong>Note:</strong> This will NOT delete players, clubs, or users - only results.</p>
+                            <form method="post" asp-page-handler="ClearResults" onsubmit="return confirm('Are you sure you want to clear all results? This action cannot be undone!');">
+                                <button type="submit" class="btn btn-danger">Clear All Results</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12 text-center">
+                    <a href="/Dashboard" class="btn btn-secondary">Return to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function backupDatabase() {
+        try {
+            // Show loading state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Creating Backup...';
+
+            // Get anti-forgery token from the hidden form
+            const form = document.getElementById('backupForm');
+            const token = form.querySelector('input[name="__RequestVerificationToken"]');
+            
+            if (!token) {
+                throw new Error('Security token not found');
+            }
+
+            // Submit request to get the file
+            const response = await fetch('?handler=BackupDatabase', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token.value,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error('Failed to create backup: ' + (errorText || response.statusText));
+            }
+
+            // Get the blob from response
+            const blob = await response.blob();
+            
+            // Get the filename from the Content-Disposition header if available
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = 'golf_backup.db';
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (filenameMatch && filenameMatch[1]) {
+                    filename = filenameMatch[1].replace(/['"]/g, '');
+                }
+            } else {
+                // Fallback: create filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                filename = `golf_backup_${timestamp}.db`;
+            }
+
+            // Try to use File System Access API for file picker (modern browsers)
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: filename,
+                        types: [{
+                            description: 'SQLite Database Files',
+                            accept: {
+                                'application/x-sqlite3': ['.db', '.sqlite', '.sqlite3']
+                            }
+                        }]
+                    });
+
+                    // Write the blob to the selected file
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+
+                    // Reset button
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    alert('Database backup saved successfully!');
+                    return;
+                } catch (fileError) {
+                    // User cancelled the file picker
+                    if (fileError.name === 'AbortError') {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                        return;
+                    }
+                    // If File System Access API fails, fall through to fallback method
+                    console.warn('File System Access API failed, using fallback:', fileError);
+                }
+            }
+
+            // Fallback: Use traditional download method (opens browser's save dialog)
+            // Note: This will use browser's default download location (usually Downloads)
+            // File System Access API is required for custom location selection
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+
+            // Reset button
+            button.disabled = false;
+            button.textContent = originalText;
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            alert('Error creating backup: ' + error.message);
+            
+            // Reset button
+            const button = event.target;
+            button.disabled = false;
+            button.textContent = 'Database Backup';
+        }
+    }
+</script>
