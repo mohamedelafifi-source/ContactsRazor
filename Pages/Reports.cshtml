@@ -1,0 +1,167 @@
+@page
+@model ContactsRazor.Pages.ReportsModel
+@using ContactsRazor.Helpers
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="container mt-4">
+    <!-- Club Information Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="card-title mb-1">@(Model.CurrentClub?.ClubCode ?? "N/A") - @(Model.CurrentClub?.LongName ?? "N/A")</h2>
+                    <p class="card-text mb-0">Reports</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Report Type Selection -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Select Report Type</h4>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <a href="/Reports?reportType=player" class="btn @(Model.ReportType == "player" ? "btn-primary" : "btn-outline-primary")">
+                            By Player
+                        </a>
+                        <a href="/Reports?reportType=average" class="btn @(Model.ReportType == "average" ? "btn-primary" : "btn-outline-primary")">
+                            By Average
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- By Player Report -->
+    @if (Model.ReportType == "player")
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Report by Player</h4>
+                        <small class="text-muted">Showing all results for club players</small>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.PlayerResults.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Player Name</th>
+                                            <th>Venue</th>
+                                            <th>Date</th>
+                                            <th>Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var result in Model.PlayerResults)
+                                        {
+                                            <tr>
+                                                <td>@result.PlayerName</td>
+                                                <td>@result.Venue</td>
+                                                <td>@result.Date.ToString("yyyy-MM-dd")</td>
+                                                <td>@result.Result</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted mt-3">
+                                <strong>Total Results:</strong> @Model.PlayerResults.Count
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <p class="mb-0">No results found for players in this club.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- By Average Report -->
+    @if (Model.ReportType == "average")
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0">Report by Average</h4>
+                        <small class="text-muted">Sorted by highest to lowest average</small>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.PlayerAverages.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Player Name</th>
+                                            <th>Total Points</th>
+                                            <th>Number of Games</th>
+                                            <th>Average</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int rank = 1;
+                                        }
+                                        @foreach (var avg in Model.PlayerAverages)
+                                        {
+                                            <tr>
+                                                <td>@rank</td>
+                                                <td>@avg.PlayerName</td>
+                                                <td>@avg.TotalPoints</td>
+                                                <td>@avg.NumberOfGames</td>
+                                                <td><strong>@avg.Average.ToString("F2")</strong></td>
+                                            </tr>
+                                            rank++;
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted mt-3">
+                                <strong>Total Players with Results:</strong> @Model.PlayerAverages.Count
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <p class="mb-0">No results found for players in this club.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Navigation -->
+    <div class="row mt-4">
+        <div class="col-md-12 text-center">
+            <a href="/Dashboard" class="btn btn-secondary">Return to Dashboard</a>
+        </div>
+    </div>
+</div>

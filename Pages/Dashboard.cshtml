@@ -30,7 +30,7 @@
             </div>
 
             <div class="row mt-4">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title">👥 Players Management</h5>
@@ -41,12 +41,21 @@
                 </div>
                 @if (User.IsClubCaptain())
                 {
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card h-100">
                             <div class="card-body">
                                 <h5 class="card-title">📊 Enter Results</h5>
                                 <p class="card-text">Enter and manage competition results.</p>
                                 <a href="/Results" class="btn btn-success">Enter Results</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">📈 Reports</h5>
+                                <p class="card-text">View reports by player or by average.</p>
+                                <a href="/Reports" class="btn btn-info">Reports</a>
                             </div>
                         </div>
                     </div>
