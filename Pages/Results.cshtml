@@ -205,6 +205,43 @@
         </div>
     }
 
+    <!-- Text Import Section (when result set is selected) -->
+    @if (Model.CurrentResultSet != null)
+    {
+        <div class="row mt-4">
+            <div class="col-md-8 mx-auto">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Import from Text</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            Select a <strong>.txt</strong> file where each line has the format:
+                        </p>
+                        <pre class="bg-light p-2 border rounded mb-2">Player Name | Result</pre>
+                        <p class="text-muted small mb-3">
+                            - Player Name must exactly match a player in your club.<br />
+                            - Result must be an integer between 0 and 50.<br />
+                            - Maximum @Model.MaxResultEntries results per set (including existing entries).<br />
+                            - Duplicate players in the same set will be skipped.
+                        </p>
+
+                        <form method="post"
+                              asp-page-handler="ImportText"
+                              asp-route-resultSetId="@Model.CurrentResultSet.Id"
+                              enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="importFile" class="form-label">Text File (.txt)</label>
+                                <input type="file" class="form-control" id="importFile" name="importFile" accept=".txt" required />
+                            </div>
+                            <button type="submit" class="btn btn-info">Import from Text</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- Mode Selection Buttons (at bottom) -->
     <div class="row mt-4">
         <div class="col-md-8 mx-auto text-center">
@@ -214,20 +251,6 @@
             </div>
             <div class="mt-3">
                 <a href="/Dashboard" class="btn btn-secondary">Exit to Dashboard</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Placeholder for PDF Import (Future Feature) -->
-    <div class="row mt-4">
-        <div class="col-md-8 mx-auto">
-            <div class="card border-warning">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">Import from PDF (Coming Soon)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-0">PDF import functionality will be available in a future update.</p>
-                </div>
             </div>
         </div>
     </div>

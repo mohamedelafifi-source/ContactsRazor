@@ -7,6 +7,7 @@ using ContactsRazor.Data;
 using ContactsRazor.Models;
 using ContactsRazor.Helpers;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 
 namespace ContactsRazor.Pages;
 
@@ -422,6 +423,169 @@ public class ResultsModel : PageModel
             TempData["Message"] = "Result entry updated successfully!";
             return RedirectToPage("/Results", new { mode = "existing", resultSetId = resultSet.Id, entryId = resultEntry.Id });
         }
+    }
+
+    public async Task<IActionResult> OnPostImportTextAsync(int resultSetId, IFormFile? importFile)
+    {
+        var clubCode = User.GetClubCode();
+        if (string.IsNullOrEmpty(clubCode) || clubCode == "FEDERE")
+        {
+            TempData["Error"] = "Invalid access.";
+            return RedirectToPage("/Dashboard");
+        }
+
+        if (importFile == null || importFile.Length == 0)
+        {
+            TempData["Error"] = "Please select a .txt file to import.";
+            return RedirectToPage("/Results", new { mode = "existing", resultSetId });
+        }
+
+        // Verify result set belongs to user's club
+        var resultSet = await _context.ResultSets
+            .FirstOrDefaultAsync(rs => rs.Id == resultSetId && rs.ClubCode == clubCode);
+
+        if (resultSet == null)
+        {
+            TempData["Error"] = "Result set not found.";
+            return RedirectToPage("/Results", new { mode = "existing" });
+        }
+
+        // Load existing entries to check duplicates and current count
+        var existingEntries = await _context.ResultEntries
+            .Where(re => re.ResultSetId == resultSet.Id)
+            .ToListAsync();
+
+        var currentCount = existingEntries.Count;
+        int addedCount = 0;
+        int skippedNameNotFound = 0;
+        int skippedInvalidFormat = 0;
+        int skippedInvalidResult = 0;
+        int skippedDuplicate = 0;
+        int skippedMaxReached = 0;
+
+        using (var reader = new StreamReader(importFile.OpenReadStream()))
+        {
+            string? line;
+            int lineNumber = 0;
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                lineNumber++;
+                line = line.Trim();
+
+                if (string.IsNullOrEmpty(line))
+                {
+                    continue;
+                }
+
+                // Expected format: Player Name | Result
+                var parts = line.Split('|');
+                if (parts.Length < 2)
+                {
+                    skippedInvalidFormat++;
+                    continue;
+                }
+
+                var playerName = parts[0].Trim();
+                var resultText = parts[1].Trim();
+
+                if (string.IsNullOrEmpty(playerName))
+                {
+                    skippedInvalidFormat++;
+                    continue;
+                }
+
+                if (!int.TryParse(resultText, out var resultValue))
+                {
+                    skippedInvalidResult++;
+                    continue;
+                }
+
+                if (resultValue < 0 || resultValue > 50)
+                {
+                    skippedInvalidResult++;
+                    continue;
+                }
+
+                if (currentCount + addedCount >= MaxResultEntries)
+                {
+                    skippedMaxReached++;
+                    break; // No more entries can be added
+                }
+
+                // Find player in this club by exact name (names are unique globally)
+                var player = await _context.Players
+                    .FirstOrDefaultAsync(p => p.ClubCode == clubCode && p.Name == playerName);
+
+                if (player == null)
+                {
+                    skippedNameNotFound++;
+                    continue;
+                }
+
+                // Check for duplicate player in this result set
+                if (existingEntries.Any(e => e.PlayerId == player.Id) ||
+                    await _context.ResultEntries.AnyAsync(re => re.ResultSetId == resultSet.Id && re.PlayerId == player.Id))
+                {
+                    skippedDuplicate++;
+                    continue;
+                }
+
+                var entry = new ResultEntry
+                {
+                    ResultSetId = resultSet.Id,
+                    PlayerId = player.Id,
+                    HCP = player.Index, // Use player's current index as HCP
+                    Result = resultValue
+                };
+
+                _context.ResultEntries.Add(entry);
+                addedCount++;
+            }
+        }
+
+        if (addedCount > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        // Build feedback message
+        var messages = new List<string>();
+        if (addedCount > 0)
+        {
+            messages.Add($"{addedCount} result(s) imported successfully.");
+        }
+        if (skippedNameNotFound > 0)
+        {
+            messages.Add($"{skippedNameNotFound} line(s) skipped because player name was not found in your club.");
+        }
+        if (skippedInvalidFormat > 0)
+        {
+            messages.Add($"{skippedInvalidFormat} line(s) skipped due to invalid format (expected: Name | Result).");
+        }
+        if (skippedInvalidResult > 0)
+        {
+            messages.Add($"{skippedInvalidResult} line(s) skipped due to invalid result (must be an integer between 0 and 50).");
+        }
+        if (skippedDuplicate > 0)
+        {
+            messages.Add($"{skippedDuplicate} line(s) skipped because the player already has a result in this set.");
+        }
+        if (skippedMaxReached > 0)
+        {
+            messages.Add("Maximum number of results for this set has been reached; remaining lines were not imported.");
+        }
+
+        if (messages.Any())
+        {
+            TempData["Message"] = string.Join(" ", messages);
+        }
+        else
+        {
+            TempData["Message"] = "No results were imported from the file.";
+        }
+
+        return RedirectToPage("/Results", new { mode = "existing", resultSetId = resultSet.Id });
     }
 
     public async Task<IActionResult> OnPostDeleteEntryAsync(int id, int resultSetId)
