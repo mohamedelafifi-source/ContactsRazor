@@ -184,7 +184,11 @@ public class ResultsModel : PageModel
                 else
                 {
                     TempData["Error"] = $"Maximum {MaxResultEntries} results allowed per result set.";
-                    return RedirectToPage("/Results", new { mode = "existing", resultSetId = CurrentResultSet.Id });
+                    if (CurrentResultSet != null)
+                    {
+                        return RedirectToPage("/Results", new { mode = "existing", resultSetId = CurrentResultSet.Id });
+                    }
+                    return RedirectToPage("/Results", new { mode = "existing" });
                 }
             }
             else if (entryId.HasValue && entryId.Value > 0)

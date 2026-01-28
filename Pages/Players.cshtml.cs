@@ -302,10 +302,19 @@ public class PlayersModel : PageModel
         }
         else
         {
-            var errorMsg = $"Import failed. {result.PlayersAdded} player(s) imported. Errors: {string.Join("; ", result.Errors.Take(5))}";
-            if (result.Errors.Count > 5)
+            var errorMsg = $"Import failed. {result.PlayersAdded} player(s) imported.";
+            if (result.Errors.Any())
             {
-                errorMsg += $" (and {result.Errors.Count - 5} more errors)";
+                // Show all errors, but limit display length
+                var allErrors = string.Join("; ", result.Errors);
+                if (allErrors.Length > 500)
+                {
+                    errorMsg += $" Errors: {allErrors.Substring(0, 500)}... (truncated, see first {result.Errors.Count} errors)";
+                }
+                else
+                {
+                    errorMsg += $" Errors: {allErrors}";
+                }
             }
             TempData["Error"] = errorMsg;
         }

@@ -7,5 +7,5 @@ Mahmoud|Mahmoud123|UPTOWN|Uptown Golf Club
 Galal|Galal123|GEZIRA|Guezira Golf
 Karim|Karim123|MADINA|Madinaty Golf Club
 Senousy|Senousy123|ASCLUB|Alexandria Sporting Club
-Palm|Palm123|PLMHIL|Palm Hills
+Tarek|Tarek123|PLMHIL|Palm Hills
 Farid|Farid123|SOKHNA|Sokhna Golf Club

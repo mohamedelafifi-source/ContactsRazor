@@ -75,7 +75,6 @@
             <div class="row">
                 <div class="col-md-6">
                     <h6>CSV Import</h6>
-                    <p class="small text-muted">Format: Username,Password,ClubCode</p>
                     <form method="post" asp-page-handler="ImportCsv" enctype="multipart/form-data">
                         <div class="mb-3">
                             <input type="file" name="csvFile" accept=".csv" class="form-control" required />
@@ -86,7 +85,6 @@
                 </div>
                 <div class="col-md-6">
                     <h6>JSON Import</h6>
-                    <p class="small text-muted">JSON array of user objects with Username, Password, ClubCode</p>
                     <form method="post" asp-page-handler="ImportJson" enctype="multipart/form-data">
                         <div class="mb-3">
                             <input type="file" name="jsonFile" accept=".json" class="form-control" required />

@@ -62,12 +62,21 @@
                 }
                 @if (User.IsFederation())
                 {
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="card h-100">
                             <div class="card-body">
                                 <h5 class="card-title">👤 User Management</h5>
                                 <p class="card-text">View all users in the system.</p>
                                 <a href="/Users" class="btn btn-warning">Manage Users</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">📈 Reports</h5>
+                                <p class="card-text">View reports for all clubs.</p>
+                                <a href="/Reports" class="btn btn-info">Reports</a>
                             </div>
                         </div>
                     </div>

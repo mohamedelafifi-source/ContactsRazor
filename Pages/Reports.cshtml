@@ -11,7 +11,14 @@
         <div class="col-md-12">
             <div class="card bg-primary text-white">
                 <div class="card-body">
-                    <h2 class="card-title mb-1">@(Model.CurrentClub?.ClubCode ?? "N/A") - @(Model.CurrentClub?.LongName ?? "N/A")</h2>
+                    @if (Model.IsFederation)
+                    {
+                        <h2 class="card-title mb-1">Federation - All Clubs</h2>
+                    }
+                    else
+                    {
+                        <h2 class="card-title mb-1">@(Model.CurrentClub?.ClubCode ?? "N/A") - @(Model.CurrentClub?.LongName ?? "N/A")</h2>
+                    }
                     <p class="card-text mb-0">Reports</p>
                 </div>
             </div>
@@ -56,7 +63,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h4 class="mb-0">Report by Player</h4>
-                        <small class="text-muted">Showing all results for club players</small>
+                        <small class="text-muted">@(Model.IsFederation ? "Showing all results for all clubs" : "Showing all results for club players")</small>
                     </div>
                     <div class="card-body">
                         @if (Model.PlayerResults.Any())
@@ -66,6 +73,10 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th>Player Name</th>
+                                            @if (Model.IsFederation)
+                                            {
+                                                <th>Club</th>
+                                            }
                                             <th>Venue</th>
                                             <th>Date</th>
                                             <th>Result</th>
@@ -76,6 +87,10 @@
                                         {
                                             <tr>
                                                 <td>@result.PlayerName</td>
+                                                @if (Model.IsFederation)
+                                                {
+                                                    <td>@result.ClubName</td>
+                                                }
                                                 <td>@result.Venue</td>
                                                 <td>@result.Date.ToString("yyyy-MM-dd")</td>
                                                 <td>@result.Result</td>
@@ -91,7 +106,7 @@
                         else
                         {
                             <div class="alert alert-info">
-                                <p class="mb-0">No results found for players in this club.</p>
+                                <p class="mb-0">@(Model.IsFederation ? "No results found." : "No results found for players in this club.")</p>
                             </div>
                         }
                     </div>
@@ -119,6 +134,10 @@
                                         <tr>
                                             <th>Rank</th>
                                             <th>Player Name</th>
+                                            @if (Model.IsFederation)
+                                            {
+                                                <th>Club</th>
+                                            }
                                             <th>Total Points</th>
                                             <th>Number of Games</th>
                                             <th>Average</th>
@@ -133,6 +152,10 @@
                                             <tr>
                                                 <td>@rank</td>
                                                 <td>@avg.PlayerName</td>
+                                                @if (Model.IsFederation)
+                                                {
+                                                    <td>@avg.ClubName</td>
+                                                }
                                                 <td>@avg.TotalPoints</td>
                                                 <td>@avg.NumberOfGames</td>
                                                 <td><strong>@avg.Average.ToString("F2")</strong></td>
@@ -149,7 +172,7 @@
                         else
                         {
                             <div class="alert alert-info">
-                                <p class="mb-0">No results found for players in this club.</p>
+                                <p class="mb-0">@(Model.IsFederation ? "No results found." : "No results found for players in this club.")</p>
                             </div>
                         }
                     </div>

@@ -1,6 +1,7 @@
 using ContactsRazor.Data;
 using ContactsRazor.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.RegularExpressions;
 
 namespace ContactsRazor.Services;
@@ -45,6 +46,8 @@ public class PlayerLoaderService
         try
         {
             var lines = await File.ReadAllLinesAsync(filePath);
+            var batchCodes = new HashSet<string>(); // Track codes in this batch
+            var batchNames = new HashSet<string>(); // Track names in this batch
 
             foreach (var line in lines)
             {
@@ -101,20 +104,37 @@ public class PlayerLoaderService
                     continue;
                 }
 
-                // Check for duplicates (Code and Name must be unique globally)
+                // Check for duplicates within the same batch first
+                if (batchCodes.Contains(code))
+                {
+                    result.Errors.Add($"Duplicate Code '{code}' found within the same file. Line: {trimmedLine}");
+                    continue;
+                }
+
+                if (batchNames.Contains(name))
+                {
+                    result.Errors.Add($"Duplicate Name '{name}' found within the same file. Line: {trimmedLine}");
+                    continue;
+                }
+
+                // Check for duplicates in database (Code and Name must be unique globally)
                 var existingByCode = await _context.Players.FirstOrDefaultAsync(p => p.Code == code);
                 if (existingByCode != null)
                 {
-                    result.Errors.Add($"Code '{code}' already exists for player '{existingByCode.Name}' (Club: {existingByCode.ClubCode}). Duplicate in line: {trimmedLine}");
+                    result.Errors.Add($"Code '{code}' already exists in database for player '{existingByCode.Name}' (Club: {existingByCode.ClubCode}). Duplicate in line: {trimmedLine}");
                     continue;
                 }
 
                 var existingByName = await _context.Players.FirstOrDefaultAsync(p => p.Name == name);
                 if (existingByName != null)
                 {
-                    result.Errors.Add($"Name '{name}' already exists for player with Code '{existingByName.Code}' (Club: {existingByName.ClubCode}). Duplicate in line: {trimmedLine}");
+                    result.Errors.Add($"Name '{name}' already exists in database for player with Code '{existingByName.Code}' (Club: {existingByName.ClubCode}). Duplicate in line: {trimmedLine}");
                     continue;
                 }
+
+                // Add to batch tracking
+                batchCodes.Add(code);
+                batchNames.Add(name);
 
                 // Create player
                 var player = new Player
@@ -131,7 +151,48 @@ public class PlayerLoaderService
 
             if (result.PlayersAdded > 0)
             {
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    // Get more detailed error information
+                    var errorMessage = $"Database error while saving players: {dbEx.Message}";
+                    if (dbEx.InnerException != null)
+                    {
+                        errorMessage += $" Inner exception: {dbEx.InnerException.Message}";
+                    }
+                    
+                    // Try to identify which player caused the issue
+                    var entries = dbEx.Entries?.ToList();
+                    if (entries != null && entries.Any())
+                    {
+                        foreach (var entry in entries)
+                        {
+                            if (entry.Entity is Player failedPlayer)
+                            {
+                                errorMessage += $" Failed player - Code: {failedPlayer.Code}, Name: {failedPlayer.Name}";
+                            }
+                        }
+                    }
+                    
+                    result.Errors.Add(errorMessage);
+                    result.Success = false;
+                    // Rollback the changes
+                    _context.ChangeTracker.Clear();
+                }
+                catch (Exception ex)
+                {
+                    result.Errors.Add($"Error saving players: {ex.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        result.Errors.Add($"Inner exception: {ex.InnerException.Message}");
+                    }
+                    result.Success = false;
+                    // Rollback the changes
+                    _context.ChangeTracker.Clear();
+                }
             }
 
             // Update club's NumberOfPlayers
